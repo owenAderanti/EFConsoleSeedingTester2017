@@ -22,8 +22,9 @@ namespace EFConsoleApp
         {
             using (ClubContext context = new ClubContext())
             {
-                SeedClub(context);
-                SeedStudents(context);
+                //SeedClub(context);
+                //SeedStudents(context);
+                SeedCourses(context);
             }
         }
 
@@ -31,10 +32,11 @@ namespace EFConsoleApp
         private static void SeedClub(ClubContext context)
         {
             #region club 1
-            context.Clubs.AddOrUpdate(c => new { c.ClubName, c.clubMembers },
+            context.Clubs.AddOrUpdate(c => c.ClubName,
 
             new Club
             {
+                //clubMembers=getMembers(context),
                 ClubName = "The Tiddly Winks Club",
                 CreationDate = DateTime.Now,
                 adminID = -1, // Choosing a negative to define unassigned as all members will have a positive id later
@@ -58,7 +60,7 @@ namespace EFConsoleApp
             });
             #endregion
             #region club 2
-            context.Clubs.AddOrUpdate(c => new { c.ClubName, c.clubMembers },
+            context.Clubs.AddOrUpdate(c => c.ClubName,
             new Club
             {
                 ClubName = "The Chess Club",
@@ -98,10 +100,34 @@ namespace EFConsoleApp
             }
             context.SaveChanges();
         }
+        public static void SeedCourses(ClubContext context)
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            string resourceName = "EFConsoleApp.Migrations.Courses.csv";
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    CsvReader csvReader = new CsvReader(reader);
+                    csvReader.Configuration.HasHeaderRecord = false;
+                    var courseData = csvReader.GetRecords<CourseDataImport>().ToArray();
+                    foreach (var dataItem in courseData)
+                    {
+                        context.Courses.AddOrUpdate(c =>
+                                new { c.CourseCode, c.CourseName }, 
+                                new Course { CourseCode = dataItem.CourseCode,
+                                              CourseName = dataItem.CourseName,
+                                                 Year = dataItem.Year});
 
+                    }
+                }
+            }
+            context.SaveChanges();
+        }
         public static List<Member> getMembers(ClubContext context )
         {
-            return GetStudents(context).Select(s => new Member { StudentID = s.StudentID }).ToList();
+            var ret = GetStudents(context).Select(s => new Member { StudentID = s.StudentID }).ToList();
+            return ret;
         }
 
         public static List<Student> GetStudents(ClubContext context)
