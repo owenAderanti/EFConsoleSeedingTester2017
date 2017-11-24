@@ -13,9 +13,6 @@ using CsvHelper;
 
 namespace EFConsoleApp
 {
-
-
-
     class Program
     {
         static void Main(string[] args)
